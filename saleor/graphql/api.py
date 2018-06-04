@@ -1,7 +1,10 @@
 import graphene
 import graphql_jwt
+from graphql_jwt.decorators import permission_required
 from graphene_django.filter import DjangoFilterConnectionField
 
+from .account.resolvers import resolve_users
+from .account.types import User
 from ..page import models as page_models
 from .core.filters import DistinctFilterSet
 from .core.mutations import CreateToken, VerifyToken
@@ -70,6 +73,11 @@ class Query(graphene.ObjectType):
         ProductType, filterset_class=DistinctFilterSet,
         level=graphene.Argument(graphene.Int),
         description='List of the shop\'s product types.')
+    user = graphene.Field(
+        User, id=graphene.Argument(graphene.ID),
+        description='Lookup an user type by ID.')
+    users = DjangoFilterConnectionField(
+        User, description='List of the shop\'s users.')
     node = graphene.Node.Field()
 
     def resolve_attributes(self, info, in_category=None, **kwargs):
@@ -112,6 +120,14 @@ class Query(graphene.ObjectType):
 
     def resolve_product_types(self, info):
         return resolve_product_types()
+
+    @permission_required(['user.view_user'])
+    def resolve_user(self, info, id):
+        return get_node(info, id, only_type=User)
+
+    @permission_required(['user.view_user'])
+    def resolve_users(self, info, **kwargs):
+        return resolve_users(info)
 
 
 class Mutations(graphene.ObjectType):
