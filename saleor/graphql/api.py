@@ -3,7 +3,7 @@ import graphql_jwt
 from graphql_jwt.decorators import permission_required
 from graphene_django.filter import DjangoFilterConnectionField
 
-from .account.resolvers import resolve_users
+from .account.resolvers import resolve_user, resolve_users
 from .account.types import User
 from ..page import models as page_models
 from .core.filters import DistinctFilterSet
@@ -121,11 +121,9 @@ class Query(graphene.ObjectType):
     def resolve_product_types(self, info):
         return resolve_product_types()
 
-    @permission_required(['user.view_user'])
     def resolve_user(self, info, id):
-        return get_node(info, id, only_type=User)
+        return resolve_user(info, id)
 
-    @permission_required(['user.view_user'])
     def resolve_users(self, info, **kwargs):
         return resolve_users(info)
 
